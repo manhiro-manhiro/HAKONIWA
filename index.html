@@ -308,32 +308,39 @@ async function doSearch(){
   btn.disabled=false;
 }
 async function searchMusic(q){
-  return new Promise(function(resolve){
-    const cb='_itunes_'+Date.now();
+  return new Promise(function(resolve,reject){
+    const cb='itunescb'+Date.now();
     const script=document.createElement('script');
     const timer=setTimeout(function(){
-      document.head.removeChild(script);
+      try{document.head.removeChild(script);}catch(e){}
       delete window[cb];
-      resolve([]);
-    },8000);
+      reject(new Error('タイムアウト'));
+    },10000);
     window[cb]=function(data){
       clearTimeout(timer);
-      document.head.removeChild(script);
+      try{document.head.removeChild(script);}catch(e){}
       delete window[cb];
-      const results=(data.results||[]).map(function(r){
-        return {title:r.collectionName||r.trackName,creator:r.artistName,cover:(r.artworkUrl100||'').replace('100x100bb','600x600bb')};
+      const results=(data.results||[]).filter(function(r){return r.collectionName;}).map(function(r){
+        return {title:r.collectionName,creator:r.artistName,cover:(r.artworkUrl100||'').replace('100x100bb','600x600bb')};
       });
       resolve(results);
+    };
+    script.onerror=function(){
+      clearTimeout(timer);
+      delete window[cb];
+      reject(new Error('iTunes接続失敗'));
     };
     script.src='https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&media=music&entity=album&limit=12&callback='+cb;
     document.head.appendChild(script);
   });
 }
 async function searchBook(q){
-  const url='https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=12';
+  const url='https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=12&country=JP';
   const res=await fetch(url);
+  if(!res.ok)throw new Error('HTTP '+res.status);
   const data=await res.json();
-  return (data.items||[]).map(function(it){
+  if(!data.items)throw new Error('items無し total='+(data.totalItems!==undefined?data.totalItems:'?'));
+  return data.items.map(function(it){
     const v=it.volumeInfo||{};
     let cover='';
     if(v.imageLinks){cover=(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail||'').replace('http://','https://');}
