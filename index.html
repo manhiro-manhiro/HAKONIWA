@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HAKONIWA</title>
+<style>
+:root{
+  --bg:#13110e;--surface:#1d1a15;--surface2:#252119;--line:rgba(255,255,255,0.08);
+  --text:#f0ebe0;--text2:#a8a090;--text3:#6b6557;
+  --accent:#c9a227;
+  --film:#7F77DD;--music:#1A9E75;--book:#3B8BD4;--game:#D85A30;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:80px}
+.wrap{max-width:600px;margin:0 auto;padding:1.25rem 1rem}
+.app-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.logo{font-size:18px;font-weight:600;letter-spacing:0.12em}
+.logo .seal{color:var(--accent)}
+.total-badge{font-size:11px;color:var(--text2);background:var(--surface);padding:5px 12px;border-radius:20px;border:0.5px solid var(--line)}
+.genre-tabs{display:flex;gap:6px;margin-bottom:1rem;overflow-x:auto;padding-bottom:2px}
+.gtab{flex:0 0 auto;font-size:13px;padding:7px 14px;border-radius:20px;border:0.5px solid var(--line);background:var(--surface);color:var(--text2);cursor:pointer;white-space:nowrap}
+.gtab.on{background:var(--surface2);color:var(--text);border-color:var(--text3)}
+.status-tabs{display:flex;gap:4px;margin-bottom:1.25rem;background:var(--surface);border-radius:8px;padding:3px}
+.stab{flex:1;font-size:12px;padding:6px;border-radius:6px;border:0;background:transparent;color:var(--text2);cursor:pointer;text-align:center}
+.stab.on{background:var(--surface2);color:var(--text)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--surface);border-radius:var(--radius);padding:12px 8px;text-align:center}
+.stat-num{font-size:20px;font-weight:600;margin-bottom:2px}
+.stat-lbl{font-size:10px;color:var(--text3)}
+.stat.film .stat-num{color:var(--film)}
+.stat.music .stat-num{color:var(--music)}
+.stat.book .stat-num{color:var(--book)}
+.stat.game .stat-num{color:var(--game)}
+.records{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rec{cursor:pointer}
+.rec-cover{width:100%;aspect-ratio:2/3;border-radius:7px;overflow:hidden;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;border:0.5px solid var(--line)}
+.rec-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.rec-cover.music{aspect-ratio:1/1}
+.rec-cover .gicon{position:absolute;top:4px;right:5px;font-size:11px;z-index:1}
+.rec-title{font-size:11px;font-weight:500;margin-top:6px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.rec-stars{font-size:9px;color:var(--accent);margin-top:2px;letter-spacing:0.5px}
+.empty{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--text3);font-size:13px;line-height:1.8}
+.empty .big{font-size:32px;margin-bottom:12px;opacity:0.4}
+.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#13110e;font-size:14px;font-weight:600;padding:14px 28px;border-radius:30px;border:0;cursor:pointer;box-shadow:0 4px 20px rgba(201,162,39,0.35)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:flex-end;justify-content:center;z-index:100}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);width:100%;max-width:600px;border-radius:16px 16px 0 0;padding:1.5rem 1.25rem;max-height:92vh;overflow-y:auto}
+.modal-head{font-size:16px;font-weight:600;margin-bottom:1.25rem;text-align:center}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:0.5px solid var(--line);border-radius:8px;padding:11px 12px;color:var(--text);font-size:14px;font-family:var(--sans)}
+.field textarea{resize:vertical;min-height:60px}
+.genre-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.gpick{padding:10px 4px;border-radius:8px;border:0.5px solid var(--line);background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;text-align:center}
+.gpick.on[data-g="映画"]{border-color:var(--film);background:rgba(127,119,221,0.15);color:var(--text)}
+.gpick.on[data-g="音楽"]{border-color:var(--music);background:rgba(26,158,117,0.15);color:var(--text)}
+.gpick.on[data-g="書籍"]{border-color:var(--book);background:rgba(59,139,212,0.15);color:var(--text)}
+.gpick.on[data-g="ゲーム"]{border-color:var(--game);background:rgba(216,90,48,0.15);color:var(--text)}
+.search-row{display:flex;gap:8px}
+.search-row input{flex:1}
+.search-btn{flex:0 0 auto;padding:0 16px;border-radius:8px;border:0;background:var(--accent);color:#13110e;font-weight:600;font-size:13px;cursor:pointer}
+.search-btn:disabled{opacity:0.5}
+.search-results{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:280px;overflow-y:auto}
+.sres{display:flex;gap:10px;align-items:center;padding:8px;border-radius:8px;background:var(--surface2);cursor:pointer;border:0.5px solid transparent}
+.sres:hover{border-color:var(--accent)}
+.sres img{width:36px;height:50px;object-fit:cover;border-radius:4px;flex:0 0 auto;background:var(--bg)}
+.sres-body{flex:1;min-width:0}
+.sres-title{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sres-meta{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-status{font-size:12px;color:var(--text3);text-align:center;padding:12px}
+.search-note{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5}
+.cover-preview{display:flex;gap:12px;align-items:center;margin-bottom:1rem;padding:10px;background:var(--surface2);border-radius:8px}
+.cover-preview img{width:44px;height:62px;object-fit:cover;border-radius:5px;background:var(--bg)}
+.cover-preview .cp-clear{margin-left:auto;font-size:11px;color:var(--text3);cursor:pointer;background:none;border:0}
+.status-pick{display:flex;gap:6px}
+.spick{flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--line);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;text-align:center}
+.spick.on{background:var(--accent);color:#13110e;border-color:var(--accent);font-weight:600}
+.star-pick{display:flex;gap:8px;font-size:30px;color:var(--text3)}
+.star-pick .s{cursor:pointer}
+.star-pick .s.on{color:var(--accent)}
+.modal-actions{display:flex;gap:10px;margin-top:1.5rem}
+.btn{flex:1;padding:13px;border-radius:10px;border:0.5px solid var(--line);background:var(--surface2);color:var(--text);font-size:14px;cursor:pointer;font-family:var(--sans)}
+.btn.primary{background:var(--accent);color:#13110e;border-color:var(--accent);font-weight:600}
+.btn.danger{background:transparent;color:#c0392b;border-color:rgba(192,57,43,0.3)}
+.divider{display:flex;align-items:center;gap:10px;margin:1.25rem 0;color:var(--text3);font-size:11px}
+.divider::before,.divider::after{content:'';flex:1;height:0.5px;background:var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="app-head">
+    <div class="logo">HAKONIWA<span class="seal"> &#9672;</span></div>
+    <div class="total-badge" id="total-badge">0 records</div>
+  </div>
+  <div class="genre-tabs" id="genre-tabs"></div>
+  <div class="status-tabs">
+    <button class="stab on" data-s="done" onclick="setStatus('done')">記録済み</button>
+    <button class="stab" data-s="want" onclick="setStatus('want')">やりたい</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="records" id="records"></div>
+</div>
+<button class="fab" onclick="openModal()">＋ 記録する</button>
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-head" id="modal-head">記録する</div>
+    <div class="field">
+      <label>ジャンル</label>
+      <div class="genre-pick">
+        <div class="gpick" data-g="映画" onclick="pickGenre('映画')">映画</div>
+        <div class="gpick" data-g="音楽" onclick="pickGenre('音楽')">音楽</div>
+        <div class="gpick" data-g="書籍" onclick="pickGenre('書籍')">書籍</div>
+        <div class="gpick" data-g="ゲーム" onclick="pickGenre('ゲーム')">ゲーム</div>
+      </div>
+    </div>
+    <div class="field" id="search-field">
+      <label id="search-label">作品を検索</label>
+      <div class="search-row">
+        <input type="text" id="f-search" placeholder="タイトルで検索" onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="search-btn" id="search-btn" onclick="doSearch()">検索</button>
+      </div>
+      <div class="search-results" id="search-results"></div>
+      <div class="search-note" id="search-note"></div>
+    </div>
+    <div class="divider">または手入力</div>
+    <div class="cover-preview" id="cover-preview" style="display:none">
+      <img id="cp-img" src="" alt="">
+      <div style="font-size:12px;color:var(--text2)">ジャケット設定済み</div>
+      <button class="cp-clear" onclick="clearCover()">クリア</button>
+    </div>
+    <div class="field">
+      <label>タイトル</label>
+      <input type="text" id="f-title" placeholder="作品名を入力">
+    </div>
+    <div class="field">
+      <label id="creator-label">作者・制作者（任意）</label>
+      <input type="text" id="f-creator" placeholder="">
+    </div>
+    <div class="field">
+      <label>ジャケット画像URL（任意）</label>
+      <input type="text" id="f-cover" placeholder="https://..." onchange="setCoverFromInput()">
+    </div>
+    <div class="field">
+      <label>ステータス</label>
+      <div class="status-pick">
+        <div class="spick on" data-s="done" onclick="pickStatus('done')">記録済み</div>
+        <div class="spick" data-s="want" onclick="pickStatus('want')">やりたい</div>
+      </div>
+    </div>
+    <div class="field" id="rating-field">
+      <label>評価</label>
+      <div class="star-pick" id="star-pick">
+        <span class="s" onclick="pickStar(1)">★</span>
+        <span class="s" onclick="pickStar(2)">★</span>
+        <span class="s" onclick="pickStar(3)">★</span>
+        <span class="s" onclick="pickStar(4)">★</span>
+        <span class="s" onclick="pickStar(5)">★</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>メモ（任意）</label>
+      <textarea id="f-memo" placeholder=""></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">キャンセル</button>
+      <button class="btn primary" onclick="saveRecord()">保存</button>
+    </div>
+    <div class="modal-actions" id="delete-row" style="display:none">
+      <button class="btn danger" onclick="deleteRecord()">この記録を削除</button>
+    </div>
+  </div>
+</div>
+<script>
+const STORAGE_KEY='hakoniwa-v1';
+const GENRES=['映画','音楽','書籍','ゲーム'];
+const GENRE_CLASS={'映画':'film','音楽':'music','書籍':'book','ゲーム':'game'};
+const GENRE_ICON={'映画':'🎬','音楽':'💿','書籍':'📚','ゲーム':'🎮'};
+const CREATOR_LABEL={'映画':'監督（任意）','音楽':'アーティスト（任意）','書籍':'著者（任意）','ゲーム':'開発元（任意）'};
+const SEARCHABLE={'音楽':true,'書籍':true,'映画':false,'ゲーム':false};
+let records=[];
+let activeGenre='all';
+let activeStatus='done';
+let editing={genre:'映画',status:'done',stars:0,id:null,cover:''};
+function load(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)records=JSON.parse(r);}catch(e){records=[];}}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(records));}catch(e){}}
+function buildGenreTabs(){
+  const tabs=['all'].concat(GENRES);
+  document.getElementById('genre-tabs').innerHTML=tabs.map(function(g){
+    return '<button class="gtab'+(g===activeGenre?' on':'')+'" onclick="setGenre(\''+g+'\')">'+(g==='all'?'すべて':g)+'</button>';
+  }).join('');
+}
+function setGenre(g){activeGenre=g;buildGenreTabs();render();}
+function setStatus(s){
+  activeStatus=s;
+  document.querySelectorAll('.stab').forEach(function(b){b.classList.toggle('on',b.dataset.s===s);});
+  render();
+}
+function render(){
+  const counts={'映画':0,'音楽':0,'書籍':0,'ゲーム':0};
+  records.filter(function(r){return r.status==='done';}).forEach(function(r){counts[r.genre]++;});
+  document.getElementById('stats').innerHTML=GENRES.map(function(g){
+    return '<div class="stat '+GENRE_CLASS[g]+'"><div class="stat-num">'+counts[g]+'</div><div class="stat-lbl">'+g+'</div></div>';
+  }).join('');
+  const total=records.filter(function(r){return r.status==='done';}).length;
+  document.getElementById('total-badge').textContent=total+' records';
+  let list=records.filter(function(r){return r.status===activeStatus;});
+  if(activeGenre!=='all')list=list.filter(function(r){return r.genre===activeGenre;});
+  list.sort(function(a,b){return b.created-a.created;});
+  const el=document.getElementById('records');
+  if(list.length===0){
+    el.innerHTML='<div class="empty"><div class="big">&#9672;</div>'+(activeStatus==='done'?'まだ記録がありません。<br>下のボタンから最初の一作を。':'やりたいリストは空です。')+'</div>';
+    return;
+  }
+  el.innerHTML=list.map(function(r){
+    const coverInner=r.cover?'<img src="'+esc(r.cover)+'" alt="" onerror="this.style.display=\'none\'">':'';
+    const coverClass='rec-cover'+(r.genre==='音楽'?' music':'');
+    const stars=r.status==='done'&&r.stars>0?'<div class="rec-stars">'+'★'.repeat(r.stars)+'</div>':'';
+    const fallback=r.cover?'':GENRE_ICON[r.genre];
+    return '<div class="rec" onclick="editRecord(\''+r.id+'\')">'+
+      '<div class="'+coverClass+'"><span class="gicon">'+GENRE_ICON[r.genre]+'</span>'+fallback+coverInner+'</div>'+
+      '<div class="rec-title">'+esc(r.title)+'</div>'+stars+'</div>';
+  }).join('');
+}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function openModal(){
+  editing={genre:'映画',status:'done',stars:0,id:null,cover:''};
+  document.getElementById('modal-head').textContent='記録する';
+  document.getElementById('f-title').value='';
+  document.getElementById('f-creator').value='';
+  document.getElementById('f-cover').value='';
+  document.getElementById('f-memo').value='';
+  document.getElementById('f-search').value='';
+  document.getElementById('search-results').innerHTML='';
+  document.getElementById('delete-row').style.display='none';
+  syncModal();
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+function editRecord(id){
+  const r=records.find(function(x){return x.id===id;});
+  if(!r)return;
+  editing={genre:r.genre,status:r.status,stars:r.stars||0,id:r.id,cover:r.cover||''};
+  document.getElementById('modal-head').textContent='記録を編集';
+  document.getElementById('f-title').value=r.title;
+  document.getElementById('f-creator').value=r.creator||'';
+  document.getElementById('f-cover').value=r.cover||'';
+  document.getElementById('f-memo').value=r.memo||'';
+  document.getElementById('f-search').value='';
+  document.getElementById('search-results').innerHTML='';
+  document.getElementById('delete-row').style.display='flex';
+  syncModal();
+  document.getElementById('modal-bg').classList.add('open');
+}
+function pickGenre(g){editing.genre=g;document.getElementById('search-results').innerHTML='';syncModal();}
+function pickStatus(s){editing.status=s;syncModal();}
+function pickStar(n){editing.stars=(editing.stars===n?0:n);syncModal();}
+function syncModal(){
+  document.querySelectorAll('.gpick').forEach(function(b){b.classList.toggle('on',b.dataset.g===editing.genre);});
+  document.querySelectorAll('.spick').forEach(function(b){b.classList.toggle('on',b.dataset.s===editing.status);});
+  document.getElementById('creator-label').textContent=CREATOR_LABEL[editing.genre];
+  document.getElementById('rating-field').style.display=editing.status==='done'?'block':'none';
+  const stars=document.querySelectorAll('#star-pick .s');
+  stars.forEach(function(s,i){s.classList.toggle('on',i<editing.stars);});
+  const sf=document.getElementById('search-field');
+  const note=document.getElementById('search-note');
+  if(SEARCHABLE[editing.genre]){
+    sf.style.opacity='1';sf.style.pointerEvents='auto';
+    document.getElementById('f-search').placeholder=(editing.genre==='音楽'?'アーティストやアルバム名':'本のタイトルや著者')+'で検索';
+    note.textContent='';
+  }else{
+    sf.style.opacity='0.4';sf.style.pointerEvents='none';
+    note.textContent='※映画・ゲームの検索は今後対応予定です（手入力で記録できます）';
+  }
+  const cp=document.getElementById('cover-preview');
+  if(editing.cover){cp.style.display='flex';document.getElementById('cp-img').src=editing.cover;}
+  else{cp.style.display='none';}
+}
+function setCoverFromInput(){editing.cover=document.getElementById('f-cover').value.trim();syncModal();}
+function clearCover(){editing.cover='';document.getElementById('f-cover').value='';syncModal();}
+async function doSearch(){
+  const q=document.getElementById('f-search').value.trim();
+  if(!q)return;
+  if(!SEARCHABLE[editing.genre])return;
+  const btn=document.getElementById('search-btn');
+  const resEl=document.getElementById('search-results');
+  btn.disabled=true;
+  resEl.innerHTML='<div class="search-status">検索中...</div>';
+  try{
+    let items=[];
+    if(editing.genre==='音楽'){items=await searchMusic(q);}
+    else if(editing.genre==='書籍'){items=await searchBook(q);}
+    if(items.length===0){
+      resEl.innerHTML='<div class="search-status">結果が見つかりませんでした</div>';
+    }else{
+      window._searchItems=items;
+      resEl.innerHTML=items.map(function(it,i){
+        return '<div class="sres" onclick="pickResult('+i+')">'+
+          (it.cover?'<img src="'+esc(it.cover)+'" alt="">':'<div style="width:36px;height:50px;border-radius:4px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:16px">'+GENRE_ICON[editing.genre]+'</div>')+
+          '<div class="sres-body"><div class="sres-title">'+esc(it.title)+'</div><div class="sres-meta">'+esc(it.creator)+'</div></div></div>';
+      }).join('');
+    }
+  }catch(e){
+    resEl.innerHTML='<div class="search-status">検索に失敗しました。通信環境を確認してください。</div>';
+  }
+  btn.disabled=false;
+}
+async function searchMusic(q){
+  const url='https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&media=music&entity=album&limit=12';
+  const res=await fetch(url);
+  const data=await res.json();
+  return (data.results||[]).map(function(r){
+    return {title:r.collectionName,creator:r.artistName,cover:(r.artworkUrl100||'').replace('100x100bb','400x400bb')};
+  });
+}
+async function searchBook(q){
+  const url='https://www.googleapis.com/books/v1/volumes?q='+encodeURIComponent(q)+'&maxResults=12';
+  const res=await fetch(url);
+  const data=await res.json();
+  return (data.items||[]).map(function(it){
+    const v=it.volumeInfo||{};
+    let cover='';
+    if(v.imageLinks){cover=(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail||'').replace('http://','https://');}
+    return {title:v.title||'(無題)',creator:(v.authors||[]).join(', '),cover:cover};
+  });
+}
+function pickResult(i){
+  const it=window._searchItems[i];
+  if(!it)return;
+  document.getElementById('f-title').value=it.title;
+  document.getElementById('f-creator').value=it.creator;
+  document.getElementById('f-cover').value=it.cover||'';
+  editing.cover=it.cover||'';
+  document.getElementById('search-results').innerHTML='';
+  document.getElementById('f-search').value='';
+  syncModal();
+}
+function saveRecord(){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){document.getElementById('f-title').focus();return;}
+  const creator=document.getElementById('f-creator').value.trim();
+  const memo=document.getElementById('f-memo').value.trim();
+  const cover=document.getElementById('f-cover').value.trim();
+  if(editing.id){
+    const r=records.find(function(x){return x.id===editing.id;});
+    if(r){r.title=title;r.creator=creator;r.memo=memo;r.cover=cover;r.genre=editing.genre;r.status=editing.status;r.stars=editing.stars;}
+  }else{
+    records.push({id:'r'+Date.now()+Math.random().toString(36).slice(2,6),title:title,creator:creator,memo:memo,cover:cover,genre:editing.genre,status:editing.status,stars:editing.stars,created:Date.now()});
+  }
+  save();closeModal();
+  activeStatus=editing.status;
+  document.querySelectorAll('.stab').forEach(function(b){b.classList.toggle('on',b.dataset.s===activeStatus);});
+  render();
+}
+function deleteRecord(){
+  if(!editing.id)return;
+  records=records.filter(function(x){return x.id!==editing.id;});
+  save();closeModal();render();
+}
+function init(){
+  load();
+  buildGenreTabs();
+  render();
+}
+init();
+</script>
+</body>
+</html>
