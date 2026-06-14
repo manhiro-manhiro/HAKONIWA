@@ -314,30 +314,16 @@ async function doSearch(){
   btn.disabled=false;
 }
 async function searchMusic(q){
-  return new Promise(function(resolve,reject){
-    const cb='itunescb'+Date.now();
-    const script=document.createElement('script');
-    const timer=setTimeout(function(){
-      try{document.head.removeChild(script);}catch(e){}
-      delete window[cb];
-      reject(new Error('タイムアウト'));
-    },10000);
-    window[cb]=function(data){
-      clearTimeout(timer);
-      try{document.head.removeChild(script);}catch(e){}
-      delete window[cb];
-      const results=(data.results||[]).filter(function(r){return r.collectionName;}).map(function(r){
-        return {title:r.collectionName,creator:r.artistName,cover:(r.artworkUrl100||'').replace('100x100bb','600x600bb')};
-      });
-      resolve(results);
-    };
-    script.onerror=function(){
-      clearTimeout(timer);
-      delete window[cb];
-      reject(new Error('iTunes接続失敗'));
-    };
-    script.src='https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&media=music&entity=album&limit=12&callback='+cb;
-    document.head.appendChild(script);
+  const key='2fd402176f83be7b3d9f7301ddf946b3';
+  const url='https://ws.audioscrobbler.com/2.0/?method=album.search&album='+encodeURIComponent(q)+'&api_key='+key+'&format=json&limit=12';
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  const matches=(data.results&&data.results.albummatches&&data.results.albummatches.album)||[];
+  return matches.map(function(a){
+    const images=a.image||[];
+    const cover=(images.find(function(i){return i.size==='extralarge';})||images[images.length-1]||{})['#text']||'';
+    return {title:a.name,creator:a.artist,cover:cover};
   });
 }
 async function searchBook(q){
