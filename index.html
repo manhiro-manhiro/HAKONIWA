@@ -303,7 +303,7 @@ async function doSearch(){
       }).join('');
     }
   }catch(e){
-    resEl.innerHTML='<div class="search-status">検索に失敗しました。通信環境を確認してください。</div>';
+    resEl.innerHTML='<div class="search-status">エラー: '+esc(String(e.message||e))+'</div>';
   }
   btn.disabled=false;
 }
