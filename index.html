@@ -38,7 +38,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .rec{cursor:pointer}
 .rec-cover{width:100%;aspect-ratio:2/3;border-radius:7px;overflow:hidden;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;border:0.5px solid var(--line)}
 .rec-cover img{width:100%;height:100%;object-fit:cover;display:block}
-.rec-cover.music{aspect-ratio:1/1}
+.rec-cover.music{aspect-ratio:1/1}.rec-cover.game{aspect-ratio:16/9}
 .rec-cover .gicon{position:absolute;top:4px;right:5px;font-size:11px;z-index:1}
 .rec-title{font-size:11px;font-weight:500;margin-top:6px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .rec-stars{font-size:9px;color:var(--accent);margin-top:2px;letter-spacing:0.5px}
@@ -179,7 +179,7 @@ const GENRES=['映画','音楽','書籍','ゲーム'];
 const GENRE_CLASS={'映画':'film','音楽':'music','書籍':'book','ゲーム':'game'};
 const GENRE_ICON={'映画':'🎬','音楽':'💿','書籍':'📚','ゲーム':'🎮'};
 const CREATOR_LABEL={'映画':'監督（任意）','音楽':'アーティスト（任意）','書籍':'著者（任意）','ゲーム':'開発元（任意）'};
-const SEARCHABLE={'音楽':true,'書籍':true,'映画':false,'ゲーム':false};
+const SEARCHABLE={'音楽':true,'書籍':true,'映画':true,'ゲーム':true};
 let records=[];
 let activeGenre='all';
 let activeStatus='done';
@@ -268,11 +268,12 @@ function syncModal(){
   const note=document.getElementById('search-note');
   if(SEARCHABLE[editing.genre]){
     sf.style.opacity='1';sf.style.pointerEvents='auto';
-    document.getElementById('f-search').placeholder=(editing.genre==='音楽'?'アーティストやアルバム名':'本のタイトルや著者')+'で検索';
+    const ph={'映画':'映画タイトルで検索','音楽':'アーティストやアルバム名で検索','書籍':'本のタイトルや著者で検索','ゲーム':'ゲームタイトルで検索'};
+    document.getElementById('f-search').placeholder=ph[editing.genre]||'検索';
     note.textContent='';
   }else{
     sf.style.opacity='0.4';sf.style.pointerEvents='none';
-    note.textContent='※映画・ゲームの検索は今後対応予定です（手入力で記録できます）';
+    note.textContent='';
   }
   const cp=document.getElementById('cover-preview');
   if(editing.cover){cp.style.display='flex';document.getElementById('cp-img').src=editing.cover;}
@@ -292,6 +293,8 @@ async function doSearch(){
     let items=[];
     if(editing.genre==='音楽'){items=await searchMusic(q);}
     else if(editing.genre==='書籍'){items=await searchBook(q);}
+    else if(editing.genre==='映画'){items=await searchMovie(q);}
+    else if(editing.genre==='ゲーム'){items=await searchGame(q);}
     if(items.length===0){
       resEl.innerHTML='<div class="search-status">結果が見つかりませんでした</div>';
     }else{
@@ -348,6 +351,28 @@ async function searchBook(q){
     let cover='';
     if(v.imageLinks){cover=(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail||'').replace('http://','https://');}
     return {title:v.title||'(無題)',creator:(v.authors||[]).join(', '),cover:cover};
+  });
+}
+async function searchMovie(q){
+  const key='976e85329253ebeaf135b1bcf2d3ab99';
+  const url='https://api.themoviedb.org/3/search/movie?api_key='+key+'&query='+encodeURIComponent(q)+'&language=ja-JP&page=1';
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  return (data.results||[]).slice(0,12).map(function(r){
+    const cover=r.poster_path?'https://image.tmdb.org/t/p/w300'+r.poster_path:'';
+    const year=r.release_date?r.release_date.slice(0,4):'';
+    return {title:r.title||r.original_title,creator:year,cover:cover};
+  });
+}
+async function searchGame(q){
+  const key='dc2b537a78b0401e86fedd59bc439d19';
+  const url='https://api.rawg.io/api/games?key='+key+'&search='+encodeURIComponent(q)+'&page_size=12';
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  return (data.results||[]).map(function(r){
+    return {title:r.name,creator:(r.released||'').slice(0,4),cover:r.background_image||''};
   });
 }
 function pickResult(i){
