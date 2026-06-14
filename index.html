@@ -303,7 +303,10 @@ async function doSearch(){
       }).join('');
     }
   }catch(e){
-    resEl.innerHTML='<div class="search-status">エラー: '+esc(String(e.message||e))+'</div>';
+    const msg=String(e.message||e);
+    let txt='検索に失敗しました。少し時間をおいて再度お試しください。';
+    if(msg.indexOf('429')>=0)txt='アクセスが集中しています。少し時間をおいてから再度お試しください。';
+    resEl.innerHTML='<div class="search-status">'+txt+'</div>';
   }
   btn.disabled=false;
 }
@@ -339,7 +342,7 @@ async function searchBook(q){
   const res=await fetch(url);
   if(!res.ok)throw new Error('HTTP '+res.status);
   const data=await res.json();
-  if(!data.items)throw new Error('items無し total='+(data.totalItems!==undefined?data.totalItems:'?'));
+  if(!data.items)return [];
   return data.items.map(function(it){
     const v=it.volumeInfo||{};
     let cover='';
