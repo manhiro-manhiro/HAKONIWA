@@ -308,11 +308,25 @@ async function doSearch(){
   btn.disabled=false;
 }
 async function searchMusic(q){
-  const url='https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&media=music&entity=album&limit=12';
-  const res=await fetch(url);
-  const data=await res.json();
-  return (data.results||[]).map(function(r){
-    return {title:r.collectionName,creator:r.artistName,cover:(r.artworkUrl100||'').replace('100x100bb','400x400bb')};
+  return new Promise(function(resolve){
+    const cb='_itunes_'+Date.now();
+    const script=document.createElement('script');
+    const timer=setTimeout(function(){
+      document.head.removeChild(script);
+      delete window[cb];
+      resolve([]);
+    },8000);
+    window[cb]=function(data){
+      clearTimeout(timer);
+      document.head.removeChild(script);
+      delete window[cb];
+      const results=(data.results||[]).map(function(r){
+        return {title:r.collectionName||r.trackName,creator:r.artistName,cover:(r.artworkUrl100||'').replace('100x100bb','600x600bb')};
+      });
+      resolve(results);
+    };
+    script.src='https://itunes.apple.com/search?term='+encodeURIComponent(q)+'&media=music&entity=album&limit=12&callback='+cb;
+    document.head.appendChild(script);
   });
 }
 async function searchBook(q){
